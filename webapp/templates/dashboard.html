@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0">Dashboard</h4>
+    <p class="text-muted small mb-0">Overview of transactions scored by the system.</p>
+  </div>
+  <a href="{{ url_for('check') }}" class="btn btn-dark">Check a transaction</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card p-3">
+      <div class="stat-label">Transactions scored</div>
+      <div class="stat-value">{{ stats.total }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card p-3">
+      <div class="stat-label">Flagged as fraud</div>
+      <div class="stat-value text-danger">{{ stats.flagged }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card p-3">
+      <div class="stat-label">Cleared</div>
+      <div class="stat-value text-success">{{ stats.cleared }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card p-3">
+      <div class="stat-label">Decision threshold</div>
+      <div class="stat-value">{{ '%.3f'|format(threshold) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3">
+  <h6 class="mb-3">Recent activity</h6>
+  {% if recent %}
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>When</th><th>Amount</th><th>Probability</th>
+          <th>Risk</th><th>Decision</th><th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in recent %}
+        <tr>
+          <td class="small text-muted">{{ p.created_at }}</td>
+          <td>{{ '%.2f'|format(p.amount) }}</td>
+          <td>{{ '%.4f'|format(p.probability) }}</td>
+          <td>
+            <span class="badge bg-{{ 'danger' if p.risk_band == 'HIGH'
+                                     else 'warning text-dark' if p.risk_band == 'MEDIUM'
+                                     else 'secondary' }}">{{ p.risk_band }}</span>
+          </td>
+          <td>
+            {% if p.is_fraud %}
+              <span class="text-danger fw-semibold">Flagged</span>
+            {% else %}
+              <span class="text-success">Cleared</span>
+            {% endif %}
+          </td>
+          <td class="small text-muted">{{ p.source }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-muted small mb-0">
+      Nothing scored yet. <a href="{{ url_for('check') }}">Check a transaction</a> to begin.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

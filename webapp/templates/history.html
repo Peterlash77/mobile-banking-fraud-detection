@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Prediction history{% endblock %}
+
+{% block content %}
+<h4 class="mb-1">Prediction history</h4>
+<p class="text-muted small mb-4">
+  Every scoring decision is written to the audit log, so any past decision can
+  be reviewed and explained after the event.
+</p>
+
+<div class="card p-3">
+{% if predictions %}
+<div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>#</th><th>When</th><th>Amount</th><th>Probability</th>
+        <th>Risk</th><th>Decision</th><th>Actual</th><th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td class="text-muted small">{{ p.id }}</td>
+        <td class="small text-muted">{{ p.created_at }}</td>
+        <td>{{ '%.2f'|format(p.amount) }}</td>
+        <td>{{ '%.4f'|format(p.probability) }}</td>
+        <td>
+          <span class="badge bg-{{ 'danger' if p.risk_band == 'HIGH'
+                                   else 'warning text-dark' if p.risk_band == 'MEDIUM'
+                                   else 'secondary' }}">{{ p.risk_band }}</span>
+        </td>
+        <td>
+          {% if p.is_fraud %}
+            <span class="text-danger fw-semibold">Flagged</span>
+          {% else %}
+            <span class="text-success">Cleared</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.actual_class is none %}
+            <span class="text-muted small">unknown</span>
+          {% elif p.actual_class == 1 %}
+            <span class="text-danger small">fraud</span>
+          {% else %}
+            <span class="text-success small">legitimate</span>
+          {% endif %}
+        </td>
+        <td class="small text-muted">{{ p.source }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="text-muted small mb-0">No predictions recorded yet.</p>
+{% endif %}
+</div>
+{% endblock %}
