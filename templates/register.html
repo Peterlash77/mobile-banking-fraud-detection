@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4 mt-5">
+      <h4 class="mb-4">Create an account</h4>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Full name</label>
+          <input name="full_name" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input name="username" class="form-control" required>
+          <div class="form-text">At least 3 characters.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input name="password" type="password" class="form-control" required>
+          <div class="form-text">At least 6 characters.</div>
+        </div>
+        <button class="btn btn-dark w-100">Register</button>
+      </form>
+      <hr class="my-4">
+      <p class="small text-muted mb-0">
+        Already registered? <a href="{{ url_for('login') }}">Log in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

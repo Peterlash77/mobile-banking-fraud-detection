@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Check transaction{% endblock %}
+
+{% block content %}
+<h4 class="mb-1">Check a transaction</h4>
+<p class="text-muted small mb-4">
+  The model scores a transaction and returns a fraud probability. Decisions are
+  written to the audit log.
+</p>
+
+{% if result %}
+<div class="card p-4 mb-4 border-{{ 'danger' if result.is_fraud else 'success' }}"
+     style="border-width:2px !important; border-style:solid !important;">
+  <div class="row align-items-center">
+    <div class="col-md-4">
+      <div class="stat-label">Decision</div>
+      <div class="stat-value {{ 'text-danger' if result.is_fraud else 'text-success' }}">
+        {{ 'FLAGGED' if result.is_fraud else 'CLEARED' }}
+      </div>
+      <div class="small text-muted">Risk band: {{ result.risk_band }}</div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-label">Fraud probability</div>
+      <div class="stat-value">{{ '%.4f'|format(result.probability) }}</div>
+      <div class="progress mt-2" style="height:6px;">
+        <div class="progress-bar bg-{{ 'danger' if result.is_fraud else 'success' }}"
+             style="width: {{ (result.probability * 100)|round(1) }}%"></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stat-label">Threshold applied</div>
+      <div class="stat-value">{{ '%.4f'|format(result.threshold) }}</div>
+      {% if result.actual_class is not none %}
+        <div class="small mt-1">
+          Known label:
+          <strong class="{{ 'text-danger' if result.actual_class == 1 else 'text-success' }}">
+            {{ 'FRAUD' if result.actual_class == 1 else 'LEGITIMATE' }}
+          </strong>
+          {% if (result.actual_class == 1) == result.is_fraud %}
+            <span class="badge bg-success ms-1">correct</span>
+          {% else %}
+            <span class="badge bg-danger ms-1">incorrect</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Sample transactions -->
+  <div class="col-lg-5">
+    <div class="card p-3 h-100">
+      <h6>Score a held-out transaction</h6>
+      <p class="small text-muted">
+        These are genuine records from the test set, which the model never saw
+        during training. In a deployed system the feature vector would arrive
+        from the core banking platform rather than being typed by a person.
+      </p>
+      <form method="post">
+        <input type="hidden" name="source" value="sample">
+        <div class="mb-3">
+          <label class="form-label small">Select a transaction</label>
+          <select name="sample_index" class="form-select">
+            {% for s in samples %}
+            <option value="{{ loop.index0 }}">
+              #{{ loop.index }} &mdash; amount {{ '%.2f'|format(s.Amount|float) }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-dark w-100">Score this transaction</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual entry -->
+  <div class="col-lg-7">
+    <div class="card p-3 h-100">
+      <h6>Enter a transaction manually</h6>
+      <p class="small text-muted">
+        Any component left blank is treated as zero, which is the mean value of
+        a principal component.
+      </p>
+      <form method="post">
+        <input type="hidden" name="source" value="manual">
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small">Amount</label>
+            <input name="Amount" type="number" step="0.01" class="form-control"
+                   value="{{ submitted.Amount if submitted else '' }}" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Time (seconds elapsed)</label>
+            <input name="Time" type="number" step="1" class="form-control"
+                   value="{{ submitted.Time if submitted else '' }}" required>
+          </div>
+        </div>
+
+        <details class="mb-3">
+          <summary class="small text-muted" style="cursor:pointer;">
+            Principal components V1&ndash;V28 (optional)
+          </summary>
+          <div class="row g-1 mt-2 v-grid">
+            {% for f in features %}
+              {% if f not in ['Time', 'Amount'] %}
+              <div class="col-3">
+                <label class="form-label small mb-0">{{ f }}</label>
+                <input name="{{ f }}" type="number" step="any"
+                       class="form-control form-control-sm"
+                       value="{{ submitted[f] if submitted else '' }}">
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </details>
+
+        <button class="btn btn-outline-dark w-100">Score this transaction</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
