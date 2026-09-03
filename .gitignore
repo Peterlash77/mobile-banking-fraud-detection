@@ -1,8 +1,12 @@
 __pycache__/
 *.pyc
-*.db
-.venv/
 venv/
-env/
-.env
-creditcard.csv
+.venv/
+data/creditcard.csv
+data/creditcard_cleaned.csv
+data/sample_transactions.csv
+models/*.joblib
+models/*.json
+outputs/*.png
+webapp/app.db
+.pytest_cache/
