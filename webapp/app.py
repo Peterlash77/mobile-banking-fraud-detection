@@ -189,7 +189,8 @@ def history():
                            predictions=database.recent_predictions(limit=100))
 
 
+database.init_db()
+
 if __name__ == "__main__":
-    database.init_db()
     print("Database ready. Default login: admin / admin123")
     app.run(debug=True, port=5000)
